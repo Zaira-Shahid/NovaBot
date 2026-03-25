@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NovaBot AI</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+:root{
+  --bg:#f8f7ff;
+  --surface:#ffffff;
+  --surface2:#f0eeff;
+  --border:#e4e0ff;
+  --primary:#7c6ff7;
+  --primary-light:#ede9ff;
+  --text:#1a1730;
+  --muted:#8b87a8;
+  --user-bg:#ede9ff;
+  --bot-bg:#ffffff;
+  --shadow:0 2px 16px rgba(124,111,247,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:var(--shadow)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#7c6ff7,#b39ddb);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:20px;height:20px;fill:#fff}
+.logo-text h1{font-size:16px;font-weight:600;color:var(--text)}
+.logo-text p{font-size:11px;color:var(--muted)}
+.status{display:flex;align-items:center;gap:6px;font-size:12px;color:#22c55e}
+.status-dot{width:7px;height:7px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.chat-area{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:20px;scroll-behavior:smooth}
+.chat-area::-webkit-scrollbar{width:4px}
+.chat-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.welcome{text-align:center;padding:48px 20px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.welcome-icon{width:64px;height:64px;background:linear-gradient(135deg,#7c6ff7,#b39ddb);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.welcome-icon svg{width:36px;height:36px;fill:#fff}
+.welcome h2{font-size:24px;font-weight:600;color:var(--text);margin-bottom:8px}
+.welcome p{font-size:14px;color:var(--muted);margin-bottom:28px}
+.suggestions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:500px}
+.sug{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:8px 16px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s}
+.sug:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
+.message{display:flex;gap:10px;animation:fadein .3s ease;max-width:75%}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.message.user{align-self:flex-end;flex-direction:row-reverse}
+.message.bot{align-self:flex-start}
+.avatar{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.avatar.bot{background:linear-gradient(135deg,#7c6ff7,#b39ddb);color:#fff}
+.avatar.user{background:var(--primary-light);color:var(--primary);border:1px solid var(--border)}
+.bubble{padding:12px 16px;border-radius:16px;font-size:14px;line-height:1.7;max-width:100%}
+.bubble.bot{background:var(--bot-bg);border:1px solid var(--border);border-radius:4px 16px 16px 16px;box-shadow:var(--shadow)}
+.bubble.user{background:var(--primary);color:#fff;border-radius:16px 4px 16px 16px}
+.bubble pre{margin:10px 0;border-radius:8px;overflow:hidden}
+.bubble code.inline{background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:12px;color:var(--primary)}
+.bubble img{max-width:100%;border-radius:8px;margin-top:8px}
+.bubble .file-preview{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-top:8px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.typing{display:flex;gap:5px;align-items:center;padding:4px 0}
+.typing span{width:7px;height:7px;background:var(--primary);border-radius:50%;opacity:.4;animation:bounce .9s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+.input-area{background:var(--surface);border-top:1px solid var(--border);padding:16px 24px;flex-shrink:0}
+.attachments-preview{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.att-chip{background:var(--primary-light);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--primary);display:flex;align-items:center;gap:6px}
+.att-chip button{background:none;border:none;cursor:pointer;color:var(--primary);font-size:14px;line-height:1;padding:0}
+.input-box{background:var(--bg);border:1.5px solid var(--border);border-radius:16px;padding:10px 14px;transition:border .2s}
+.input-box:focus-within{border-color:var(--primary)}
+.input-row{display:flex;align-items:flex-end;gap:8px}
+textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:14px;resize:none;max-height:120px;min-height:24px;line-height:1.6;font-family:'Segoe UI',sans-serif}
+textarea::placeholder{color:var(--muted)}
+.actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.icon-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.icon-btn:hover{border-color:var(--primary);background:var(--primary-light)}
+.icon-btn svg{width:16px;height:16px;fill:var(--muted)}
+.icon-btn:hover svg{fill:var(--primary)}
+.icon-btn.active{background:var(--primary);border-color:var(--primary)}
+.icon-btn.active svg{fill:#fff}
+.send-btn{width:34px;height:34px;border-radius:8px;background:var(--primary);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.send-btn:hover{background:#6366f1}
+.send-btn svg{width:16px;height:16px;fill:#fff}
+.hint{text-align:center;font-size:11px;color:var(--muted);margin-top:8px}
+#file-input{display:none}
+#img-input{display:none}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+    </div>
+    <div class="logo-text">
+      <h1>NovaBot</h1>
+      <p>AI Assistant</p>
+    </div>
+  </div>
+  <div class="status">
+    <div class="status-dot"></div>
+    Online
+  </div>
+</div>
+
+<div class="chat-area" id="chat">
+  <div class="welcome" id="welcome">
+    <div class="welcome-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+    </div>
+    <h2>Hello, I am NovaBot</h2>
+    <p>Your intelligent AI assistant — ask me anything, upload files or images, or speak to me.</p>
+    <div class="suggestions">
+      <div class="sug" onclick="suggest(this)">What can you do?</div>
+      <div class="sug" onclick="suggest(this)">Write a Python function</div>
+      <div class="sug" onclick="suggest(this)">Explain machine learning</div>
+      <div class="sug" onclick="suggest(this)">Review my code</div>
+      <div class="sug" onclick="suggest(this)">Help me write an email</div>
+      <div class="sug" onclick="suggest(this)">Summarize a document</div>
+    </div>
+  </div>
+</div>
+
+<div class="input-area">
+  <div class="attachments-preview" id="att-preview"></div>
+  <div class="input-box">
+    <div class="input-row">
+      <textarea id="input" placeholder="Message NovaBot..." rows="1"
+        onkeydown="handleKey(event)"
+        oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+      <div class="actions">
+        <button class="icon-btn" title="Upload file" onclick="document.getElementById('file-input').click()">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>
+        </button>
+        <button class="icon-btn" title="Upload image" onclick="document.getElementById('img-input').click()">
+          <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+        </button>
+        <button class="icon-btn" id="mic-btn" title="Voice input" onclick="toggleVoice()">
+          <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1 1.93c-3.95-.49-7-3.85-7-7.93h2c0 3.31 2.69 6 6 6s6-2.69 6-6h2c0 4.08-3.05 7.44-7 7.93V22h-2v-4.07z"/></svg>
+        </button>
+        <button class="send-btn" onclick="sendMessage()">
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="hint">Press Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
+</div>
+
+<input type="file" id="file-input" accept=".pdf,.txt,.doc,.docx,.csv" onchange="handleFile(event)">
+<input type="file" id="img-input" accept="image/*" onchange="handleImage(event)">
+
+<script>
+const GROQ_KEY = "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";
+let history = [];
+let attachments = [];
+let isRecording = false;
+let recognition = null;
+
+const SYSTEM = `You are NovaBot, a brilliant, friendly, and highly capable AI assistant.
+You provide detailed, accurate, and well-structured responses.
+You can help with coding, writing, analysis, image descriptions, document summarization, and any topic.
+When showing code, always use markdown code blocks with the language specified.
+Be professional yet warm and engaging.`;
+
+function formatMessage(text) {
+  text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
+    return '<pre><code class="language-' + (lang||'plaintext') + '">' + code.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</code></pre>';
+  });
+  text = text.replace(/`([^`]+)`/g, '<code class="inline">$1</code>');
+  text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  text = text.replace(/^### (.+)/gm, '<h4 style="margin:8px 0 4px;color:var(--primary)">$1</h4>');
+  text = text.replace(/^## (.+)/gm, '<h3 style="margin:10px 0 4px;color:var(--primary)">$1</h3>');
+  text = text.replace(/^# (.+)/gm, '<h2 style="margin:12px 0 6px;color:var(--primary)">$1</h2>');
+  text = text.replace(/^- (.+)/gm, '<li style="margin:2px 0 2px 16px">$1</li>');
+  text = text.replace(/^\d+\. (.+)/gm, '<li style="margin:2px 0 2px 16px;list-style:decimal">$1</li>');
+  text = text.replace(/\n/g, '<br>');
+  return text;
+}
+
+function addMessage(role, content, extras) {
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.remove();
+  const chat = document.getElementById('chat');
+  const msg = document.createElement('div');
+  msg.className = 'message ' + role;
+  const initials = role === 'bot' ? 'N' : 'U';
+  let extraHTML = '';
+  if (extras && extras.image) extraHTML += '<img src="' + extras.image + '" alt="uploaded image">';
+  if (extras && extras.file) extraHTML += '<div class="file-preview"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>' + extras.file + '</div>';
+  msg.innerHTML = '<div class="avatar ' + role + '">' + initials + '</div><div class="bubble ' + role + '">' + (role==='bot' ? formatMessage(content) : content) + extraHTML + '</div>';
+  chat.appendChild(msg);
+  chat.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function addTyping() {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = 'message bot';
+  div.id = 'typing-indicator';
+  div.innerHTML = '<div class="avatar bot">N</div><div class="bubble bot"><div class="typing"><span></span><span></span><span></span></div></div>';
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing-indicator');
+  if (t) t.remove();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('input');
+  const text = input.value.trim();
+  if (!text && attachments.length === 0) return;
+
+  let userContent = text;
+  let extras = {};
+  const messages = [...history];
+  let userMsg = { role: 'user', content: [] };
+
+  if (text) userMsg.content.push({ type: 'text', text });
+
+  attachments.forEach(att => {
+    if (att.type === 'image') {
+      extras.image = att.data;
+      userMsg.content.push({ type: 'text', text: '[Image uploaded: ' + att.name + '] Please describe or analyze this image context.' });
+    } else {
+      extras.file = att.name;
+      userMsg.content.push({ type: 'text', text: '[Document: ' + att.name + ']\nContent:\n' + att.content });
+    }
+  });
+
+  if (userMsg.content.length === 1) userMsg.content = userMsg.content[0].text;
+  
+  addMessage('user', text || 'Uploaded attachment', extras);
+  input.value = '';
+  input.style.height = 'auto';
+  attachments = [];
+  document.getElementById('att-preview').innerHTML = '';
+
+  history.push({ role: 'user', content: typeof userMsg.content === 'string' ? userMsg.content : JSON.stringify(userMsg.content) });
+  addTyping();
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'system', content: SYSTEM }, ...history],
+        max_tokens: 1024,
+        temperature: 0.7
+      })
+    });
+    const data = await res.json();
+    const reply = data.choices[0].message.content;
+    removeTyping();
+    addMessage('bot', reply);
+    history.push({ role: 'assistant', content: reply });
+    if (document.getElementById('voice-output-on')) speakText(reply);
+  } catch (e) {
+    removeTyping();
+    addMessage('bot', 'Sorry, something went wrong. Please try again.');
+  }
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function suggest(el) {
+  document.getElementById('input').value = el.textContent;
+  sendMessage();
+}
+
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    attachments.push({ type: 'file', name: file.name, content: ev.target.result });
+    updateAttPreview();
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function handleImage(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    attachments.push({ type: 'image', name: file.name, data: ev.target.result });
+    updateAttPreview();
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function updateAttPreview() {
+  const preview = document.getElementById('att-preview');
+  preview.innerHTML = '';
+  attachments.forEach((att, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'att-chip';
+    chip.innerHTML = (att.type === 'image' ? '🖼 ' : '📄 ') + att.name + '<button onclick="removeAtt(' + i + ')">×</button>';
+    preview.appendChild(chip);
+  });
+}
+
+function removeAtt(i) {
+  attachments.splice(i, 1);
+  updateAttPreview();
+}
+
+function toggleVoice() {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    alert('Voice input not supported in this browser. Use Chrome.');
+    return;
+  }
+  if (isRecording) {
+    recognition.stop();
+    isRecording = false;
+    document.getElementById('mic-btn').classList.remove('active');
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.onresult = (e) => {
+    document.getElementById('input').value = e.results[0][0].transcript;
+    isRecording = false;
+    document.getElementById('mic-btn').classList.remove('active');
+  };
+  recognition.onerror = () => {
+    isRecording = false;
+    document.getElementById('mic-btn').classList.remove('active');
+  };
+  recognition.start();
+  isRecording = true;
+  document.getElementById('mic-btn').classList.add('active');
+}
+
+function speakText(text) {
+  const clean = text.replace(/<[^>]+>/g, '').replace(/[*#`]/g, '');
+  const utt = new SpeechSynthesisUtterance(clean);
+  utt.rate = 1;
+  utt.pitch = 1;
+  window.speechSynthesis.speak(utt);
+}
+</script>
+</body>
+</html>
