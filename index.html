@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NovaBot AI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<style>
+:root {
+  --bg: #f5f4ff;
+  --surface: #ffffff;
+  --surface2: #ede9ff;
+  --border: #e0dbff;
+  --primary: #6c63ff;
+  --primary-hover: #574fd6;
+  --primary-light: #ede9ff;
+  --text: #1a1730;
+  --muted: #8b87a8;
+  --shadow: 0 4px 24px rgba(108,99,255,0.10);
+  --radius: 16px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+/* HEADER */
+.header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 28px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; box-shadow: 0 2px 12px rgba(108,99,255,0.07); }
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #6c63ff, #b39ddb); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(108,99,255,0.3); }
+.logo-icon svg { width: 22px; height: 22px; fill: #fff; }
+.logo-text h1 { font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+.logo-text p { font-size: 11px; color: var(--muted); }
+.status { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #22c55e; font-weight: 500; background: #f0fdf4; padding: 5px 12px; border-radius: 20px; border: 1px solid #bbf7d0; }
+.status-dot { width: 7px; height: 7px; background: #22c55e; border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* CHAT */
+.chat-area { flex: 1; overflow-y: auto; padding: 28px 24px; display: flex; flex-direction: column; gap: 18px; scroll-behavior: smooth; }
+.chat-area::-webkit-scrollbar { width: 4px; }
+.chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* WELCOME */
+.welcome { text-align: center; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; }
+.welcome-icon { width: 72px; height: 72px; background: linear-gradient(135deg, #6c63ff, #b39ddb); border-radius: 22px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 8px 24px rgba(108,99,255,0.25); }
+.welcome-icon svg { width: 40px; height: 40px; fill: #fff; }
+.welcome h2 { font-size: 26px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.welcome p { font-size: 14px; color: var(--muted); margin-bottom: 30px; line-height: 1.6; }
+.caps { display: flex; gap: 12px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
+.cap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.suggestions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 560px; }
+.sug { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 8px 16px; font-size: 12px; color: var(--muted); cursor: pointer; transition: all .2s; }
+.sug:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+/* MESSAGES */
+.message { display: flex; gap: 10px; animation: fadein .3s ease; }
+@keyframes fadein { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.message.user { align-self: flex-end; flex-direction: row-reverse; max-width: 72%; }
+.message.bot { align-self: flex-start; max-width: 80%; }
+.avatar { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+.avatar.bot { background: linear-gradient(135deg, #6c63ff, #b39ddb); color: #fff; box-shadow: 0 2px 8px rgba(108,99,255,0.25); }
+.avatar.user { background: var(--primary-light); color: var(--primary); border: 1px solid var(--border); }
+.bubble { padding: 12px 16px; border-radius: var(--radius); font-size: 14px; line-height: 1.75; }
+.bubble.bot { background: var(--surface); border: 1px solid var(--border); border-radius: 4px 16px 16px 16px; box-shadow: var(--shadow); }
+.bubble.user { background: var(--primary); color: #fff; border-radius: 16px 4px 16px 16px; }
+.bubble pre { margin: 10px 0; border-radius: 10px; overflow: hidden; font-size: 13px; }
+.bubble code.inline { background: var(--surface2); padding: 2px 7px; border-radius: 5px; font-size: 12px; color: var(--primary); font-family: monospace; }
+.bubble img.uploaded { max-width: 100%; border-radius: 10px; margin-top: 10px; max-height: 220px; object-fit: cover; display: block; border: 1px solid var(--border); }
+.file-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; margin-top: 10px; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.error-bubble { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #dc2626; margin-top: 6px; }
+
+/* TYPING */
+.typing { display: flex; gap: 5px; align-items: center; padding: 4px 0; }
+.typing span { width: 7px; height: 7px; background: var(--primary); border-radius: 50%; opacity: .4; animation: bounce .9s infinite; }
+.typing span:nth-child(2) { animation-delay: .2s; }
+.typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes bounce { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-5px);opacity:1} }
+
+/* INPUT */
+.input-area { background: var(--surface); border-top: 1px solid var(--border); padding: 14px 24px 16px; flex-shrink: 0; box-shadow: 0 -4px 20px rgba(108,99,255,0.05); }
+.att-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.att-chip { background: var(--primary-light); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 11px; color: var(--primary); display: flex; align-items: center; gap: 6px; font-weight: 500; }
+.att-chip button { background: none; border: none; cursor: pointer; color: var(--primary); font-size: 16px; line-height: 1; padding: 0; }
+.input-box { background: var(--bg); border: 1.5px solid var(--border); border-radius: 18px; padding: 10px 14px; transition: border .2s, box-shadow .2s; }
+.input-box:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(108,99,255,0.1); }
+.input-row { display: flex; align-items: flex-end; gap: 8px; }
+textarea { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 14px; resize: none; max-height: 120px; min-height: 24px; line-height: 1.6; font-family: 'Segoe UI', sans-serif; }
+textarea::placeholder { color: var(--muted); }
+.actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.icon-btn { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; }
+.icon-btn:hover { border-color: var(--primary); background: var(--primary-light); }
+.icon-btn svg { width: 16px; height: 16px; fill: var(--muted); transition: fill .2s; }
+.icon-btn:hover svg { fill: var(--primary); }
+.icon-btn.recording { background: #fef2f2; border-color: #ef4444; animation: rec-pulse 1s infinite; }
+.icon-btn.recording svg { fill: #ef4444; }
+@keyframes rec-pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+.send-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--primary); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; box-shadow: 0 2px 8px rgba(108,99,255,0.3); }
+.send-btn:hover { background: var(--primary-hover); transform: scale(1.05); }
+.send-btn svg { width: 16px; height: 16px; fill: #fff; }
+.bottom-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.hint { font-size: 11px; color: var(--muted); }
+.voice-status { font-size: 11px; color: #ef4444; display: none; font-weight: 500; }
+#file-input, #img-input { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+    </div>
+    <div class="logo-text">
+      <h1>NovaBot</h1>
+      <p>Powered by Llama 4</p>
+    </div>
+  </div>
+  <div class="status"><div class="status-dot"></div>Online</div>
+</div>
+
+<div class="chat-area" id="chat">
+  <div class="welcome" id="welcome">
+    <div class="welcome-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+    </div>
+    <h2>Hello, I am NovaBot</h2>
+    <p>Your intelligent AI assistant. Ask me anything, upload images or PDFs, or speak to me.</p>
+    <div class="caps">
+      <div class="cap"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg> Image Analysis</div>
+      <div class="cap"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg> PDF & Documents</div>
+      <div class="cap"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/></svg> Voice Input</div>
+    </div>
+    <div class="suggestions">
+      <div class="sug" onclick="suggest(this)">What can you do?</div>
+      <div class="sug" onclick="suggest(this)">Write a Python function</div>
+      <div class="sug" onclick="suggest(this)">Explain machine learning</div>
+      <div class="sug" onclick="suggest(this)">Help me with my resume</div>
+      <div class="sug" onclick="suggest(this)">Analyze an image for me</div>
+      <div class="sug" onclick="suggest(this)">Summarize a document</div>
+    </div>
+  </div>
+</div>
+
+<div class="input-area">
+  <div class="att-preview" id="att-preview"></div>
+  <div class="input-box">
+    <div class="input-row">
+      <textarea id="input" placeholder="Message NovaBot..." rows="1"
+        onkeydown="handleKey(event)"
+        oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+      <div class="actions">
+        <button class="icon-btn" title="Upload PDF or document" onclick="document.getElementById('file-input').click()">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>
+        </button>
+        <button class="icon-btn" title="Upload image" onclick="document.getElementById('img-input').click()">
+          <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+        </button>
+        <button class="icon-btn" id="mic-btn" title="Voice input (Chrome only)" onclick="toggleVoice()">
+          <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1 1.93c-3.95-.49-7-3.85-7-7.93h2c0 3.31 2.69 6 6 6s6-2.69 6-6h2c0 4.08-3.05 7.44-7 7.93V22h-2v-4.07z"/></svg>
+        </button>
+        <button class="send-btn" onclick="sendMessage()">
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-row">
+    <div class="hint">Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
+    <div class="voice-status" id="voice-status">🔴 Listening... speak now</div>
+  </div>
+</div>
+
+<input type="file" id="file-input" accept=".txt,.csv,.md,.py,.js,.html,.css,.json" onchange="handleFile(event)">
+<input type="file" id="img-input" accept="image/*" onchange="handleImage(event)">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+const GROQ_KEY = "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";
+const TEXT_MODEL = "llama-3.3-70b-versatile";
+const VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+let history = [];
+let attachments = [];
+let isRecording = false;
+let recognition = null;
+
+const SYSTEM = `You are NovaBot, a brilliant, friendly, and highly capable AI assistant. You provide detailed, accurate, and well-structured responses. You excel at coding, writing, analysis, image analysis, document summarization, and any topic. When showing code, always use proper markdown code blocks with the language specified. Be professional yet warm and engaging.`;
+
+function formatMessage(text) {
+  text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
+    return '<pre><code class="language-' + (lang||'plaintext') + '">' + code.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</code></pre>';
+  });
+  text = text.replace(/`([^`]+)`/g, '<code class="inline">$1</code>');
+  text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  text = text.replace(/^### (.+)/gm, '<h4 style="margin:10px 0 4px;color:var(--primary);font-size:14px">$1</h4>');
+  text = text.replace(/^## (.+)/gm, '<h3 style="margin:12px 0 6px;color:var(--primary);font-size:15px">$1</h3>');
+  text = text.replace(/^# (.+)/gm, '<h2 style="margin:14px 0 8px;color:var(--primary);font-size:17px">$1</h2>');
+  text = text.replace(/^- (.+)/gm, '<li style="margin:3px 0 3px 20px">$1</li>');
+  text = text.replace(/^\d+\. (.+)/gm, '<li style="margin:3px 0 3px 20px;list-style:decimal">$1</li>');
+  text = text.replace(/\n/g, '<br>');
+  return text;
+}
+
+function addMessage(role, content, extras) {
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.remove();
+  const chat = document.getElementById('chat');
+  const msg = document.createElement('div');
+  msg.className = 'message ' + role;
+  let extraHTML = '';
+  if (extras && extras.image) extraHTML += '<img class="uploaded" src="' + extras.image + '" alt="uploaded image">';
+  if (extras && extras.file) extraHTML += '<div class="file-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>' + extras.file + '</div>';
+  const bubbleContent = role === 'bot' ? formatMessage(content) : content.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  msg.innerHTML = '<div class="avatar ' + role + '">' + (role==='bot'?'N':'U') + '</div><div class="bubble ' + role + '">' + bubbleContent + extraHTML + '</div>';
+  chat.appendChild(msg);
+  chat.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function addTyping() {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = 'message bot';
+  div.id = 'typing-indicator';
+  div.innerHTML = '<div class="avatar bot">N</div><div class="bubble bot"><div class="typing"><span></span><span></span><span></span></div></div>';
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing-indicator');
+  if (t) t.remove();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('input');
+  const text = input.value.trim();
+  if (!text && attachments.length === 0) return;
+
+  const imageAtt = attachments.find(a => a.type === 'image');
+  const fileAtt = attachments.find(a => a.type === 'file');
+  const extras = {};
+  if (imageAtt) extras.image = imageAtt.data;
+  if (fileAtt) extras.file = fileAtt.name;
+
+  addMessage('user', text || 'Please analyze this.', extras);
+  input.value = '';
+  input.style.height = 'auto';
+
+  let messages;
+  let model = TEXT_MODEL;
+
+  if (imageAtt) {
+    model = VISION_MODEL;
+    messages = [
+      { role: 'system', content: SYSTEM },
+      ...history,
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: text || 'Please analyze and describe this image in detail. What do you see? Provide comprehensive information.' },
+          { type: 'image_url', image_url: { url: imageAtt.data } }
+        ]
+      }
+    ];
+    history.push({ role: 'user', content: text || 'Image uploaded for analysis.' });
+  } else if (fileAtt) {
+    const docPrompt = (text ? text + '\n\n' : 'Please analyze and summarize this document:\n\n') + 'Filename: ' + fileAtt.name + '\n\nContent:\n' + fileAtt.content.substring(0, 8000);
+    history.push({ role: 'user', content: docPrompt });
+    messages = [{ role: 'system', content: SYSTEM }, ...history];
+  } else {
+    history.push({ role: 'user', content: text });
+    messages = [{ role: 'system', content: SYSTEM }, ...history];
+  }
+
+  attachments = [];
+  document.getElementById('att-preview').innerHTML = '';
+  addTyping();
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+      body: JSON.stringify({ model, messages, max_tokens: 1024, temperature: 0.7 })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const reply = data.choices[0].message.content;
+    removeTyping();
+    addMessage('bot', reply);
+    history.push({ role: 'assistant', content: reply });
+  } catch (e) {
+    removeTyping();
+    addMessage('bot', 'Sorry, something went wrong: ' + e.message + '. Please check your API key.');
+  }
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function suggest(el) {
+  document.getElementById('input').value = el.textContent;
+  sendMessage();
+}
+
+// FILE HANDLER — text files only (PDF handled separately)
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    attachments = attachments.filter(a => a.type !== 'file');
+    attachments.push({ type: 'file', name: file.name, content: ev.target.result });
+    updatePreview();
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// Override file input for PDF support
+document.getElementById('file-input').addEventListener('change', async function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (file.name.toLowerCase().endsWith('.pdf')) {
+    // PDF.js text extraction
+    const arrayBuffer = await file.arrayBuffer();
+    try {
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = '';
+      for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const pageText = content.items.map(item => item.str).join(' ');
+        fullText += 'Page ' + i + ':\n' + pageText + '\n\n';
+      }
+      attachments = attachments.filter(a => a.type !== 'file');
+      attachments.push({ type: 'file', name: file.name, content: fullText });
+      updatePreview();
+    } catch (err) {
+      addMessage('bot', 'Could not read this PDF. Please try a text file (.txt) instead.');
+    }
+  } else {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      attachments = attachments.filter(a => a.type !== 'file');
+      attachments.push({ type: 'file', name: file.name, content: ev.target.result });
+      updatePreview();
+    };
+    reader.readAsText(file);
+  }
+  e.target.value = '';
+});
+
+function handleImage(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    attachments = attachments.filter(a => a.type !== 'image');
+    attachments.push({ type: 'image', name: file.name, data: ev.target.result });
+    updatePreview();
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function updatePreview() {
+  const preview = document.getElementById('att-preview');
+  preview.innerHTML = '';
+  attachments.forEach((att, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'att-chip';
+    chip.innerHTML = (att.type === 'image' ? '🖼 ' : '📄 ') + att.name + '<button onclick="removeAtt(' + i + ')">×</button>';
+    preview.appendChild(chip);
+  });
+}
+
+function removeAtt(i) {
+  attachments.splice(i, 1);
+  updatePreview();
+}
+
+function toggleVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    addMessage('bot', 'Voice input requires Chrome browser. Please open this page in Chrome and allow microphone access when prompted.');
+    return;
+  }
+  if (isRecording) {
+    recognition.stop();
+    return;
+  }
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.onstart = () => {
+    isRecording = true;
+    document.getElementById('mic-btn').classList.add('recording');
+    document.getElementById('voice-status').style.display = 'block';
+  };
+  recognition.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    document.getElementById('input').value = transcript;
+    isRecording = false;
+    document.getElementById('mic-btn').classList.remove('recording');
+    document.getElementById('voice-status').style.display = 'none';
+    setTimeout(sendMessage, 300);
+  };
+  recognition.onerror = (err) => {
+    isRecording = false;
+    document.getElementById('mic-btn').classList.remove('recording');
+    document.getElementById('voice-status').style.display = 'none';
+    if (err.error === 'not-allowed') addMessage('bot', 'Microphone access denied. Please allow microphone permission in Chrome settings and try again.');
+  };
+  recognition.onend = () => {
+    isRecording = false;
+    document.getElementById('mic-btn').classList.remove('recording');
+    document.getElementById('voice-status').style.display = 'none';
+  };
+  recognition.start();
+}
+</script>
+</body>
+</html>
